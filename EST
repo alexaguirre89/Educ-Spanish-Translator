@@ -1,0 +1,61 @@
+import streamlit as st
+
+# --- APP CONFIGURATION ---
+st.set_page_config(page_title="Profe-Trans: Castilian Tutor", page_icon="🇪🇸")
+
+st.title("🇪🇸 Profe-Trans")
+st.subheader("Your Educational Castilian Spanish Translator")
+st.markdown("---")
+
+# --- SIDEBAR SETTINGS ---
+with st.sidebar:
+    st.header("Teacher Settings")
+    hint_mode = st.toggle("Enable Hint Mode", value=False, help="In Hint Mode, students get clues instead of the direct answer.")
+    target_dialect = st.info("Current Dialect: Castilian (Spain)")
+
+# --- TRANSLATION LOGIC ---
+# In a professional version, this would call a model like 'Gemini' or 'Mistral'
+def get_educational_response(text, hints_on):
+    text = text.lower()
+    
+    # Example logic for common Castilian learning points
+    if hints_on:
+        if "you all" in text or "you guys" in text:
+            return "💡 **Hint:** In Spain, when speaking to friends, we don't use 'ustedes'. Look for the plural informal form that starts with **V**."
+        if "car" in text:
+            return "💡 **Hint:** While 'carro' is common in the Americas, in Madrid you'll see this word starting with **C** and ending in **E**."
+        return "💡 **Hint:** Check your verb endings! Does the subject match the verb?"
+    
+    else:
+        # Placeholder for real translation + grammar callout
+        if "you all eat" in text:
+            return {
+                "translation": "Vosotros coméis",
+                "grammar": "Used **Vosotros** (Informal Plural) + **-éis** ending for -ER verbs.",
+                "note": "In Castilian, 'vosotros' is the standard for groups of friends."
+            }
+        return {
+            "translation": "[Translation would appear here]",
+            "grammar": "Focus on verb-subject agreement.",
+            "note": "Remember the 'distinción' (lisp-like sound) for 'c' and 'z' in Spain!"
+        }
+
+# --- USER INTERFACE ---
+user_input = st.text_input("Enter English text to translate:", placeholder="e.g., You all eat apples")
+
+if user_input:
+    result = get_educational_response(user_input, hint_mode)
+    
+    if hint_mode:
+        st.warning(result)
+    else:
+        st.success(f"**Traducción:** {result['translation']}")
+        
+        # Educational Callout Box
+        with st.expander("📚 Why this translation? (Grammar Callout)"):
+            st.write(f"**Rule:** {result['grammar']}")
+            st.write(f"**Regional Note:** {result['note']}")
+
+# --- FOOTER ---
+st.markdown("---")
+st.caption("Built for the Spanish Classroom | Focused on Castilian Grammar")
