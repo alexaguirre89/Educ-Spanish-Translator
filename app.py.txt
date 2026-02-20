@@ -1,0 +1,100 @@
+from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
+from pydantic import BaseModel
+import csv
+import re
+
+app = FastAPI(title="Educational Spanish Translator")
+
+# --------------------
+# Load vocabulary
+# --------------------
+VOCAB = {}
+with open("vocab.csv", encoding="utf-8") as f:
+    reader = csv.DictReader(f)
+    for row in reader:
+        VOCAB[row["en"].lower()] = row
+
+# --------------------
+# Grammar helpers
+# --------------------
+SER = {
+    "i": "soy",
+    "you": "eres",
+    "he": "es",
+    "she": "es",
+    "we": "somos",
+}
+
+ESTAR = {
+    "i": "estoy",
+    "you": "estás",
+    "he": "está",
+    "she": "está",
+    "we": "estamos",
+}
+
+def agree_adjective(adj, gender):
+    if adj.endswith("o"):
+        return adj[:-1] + ("a" if gender == "f" else "o")
+    return adj
+
+# --------------------
+# API Models
+# --------------------
+class TranslateRequest(BaseModel):
+    text: str
+    chapter: int = 4
+    mode: str = "translate"
+    gender: str = "m"
+
+# --------------------
+# Translation endpoint
+# --------------------
+@app.post("/translate")
+def translate(req: TranslateRequest):
+    text = req.text.lower().strip()
+    match = re.match(r"(i|you|he|she|we) am|are|is (\w+)", text)
+    if not match:
+        return {"error": "Only supports: I am / You are / He is / She is / We are + adjective"}
+
+    subject, adjective = match.group(1), match.group(2)
+
+    if adjective not in VOCAB:
+        return {"error": f"'{adjective}' is not in the chapter vocabulary"}
+
+    entry = VOCAB[adjective]
+    tags = entry["tags"]
+
+    if "feeling" in tags:
+        verb = ESTAR[subject]
+        explanation = "We use 'estar' for temporary states or feelings."
+    else:
+        verb = SER[subject]
+        explanation = "We use 'ser' for more permanent traits."
+
+    adj_es = agree_adjective(entry["es_lemma"], req.gender)
+
+    if req.mode == "hint":
+        return {
+            "hint": [
+                f"Verb root: {'estar' if 'feeling' in tags else 'ser'}",
+                f"Adjective: {entry['es_lemma']} (match gender)",
+                "Fill in the blanks: _____ _____"
+            ]
+        }
+
+    return {
+        "output": f"{verb.capitalize()} {adj_es}.",
+        "grammar_callout": explanation
+    }
+
+# --------------------
+# Simple homepage
+# --------------------
+@app.get("/", response_class=HTMLResponse)
+def home():
+    return """
+    <h2>Educational Spanish Translator</h2>
+    <p>Use POST /translate with JSON input.</p>
+    """

@@ -1,0 +1,9 @@
+chapter,en,pos,es_lemma,tags
+4,tired,adj,cansado,feeling
+4,bored,adj,aburrido,feeling
+4,happy,adj,contento,feeling
+4,sad,adj,triste,feeling
+4,sick,adj,enfermo,feeling
+4,smart,adj,inteligente,trait
+4,hardworking,adj,trabajador,trait
+4,lazy,adj,perezoso,trait
